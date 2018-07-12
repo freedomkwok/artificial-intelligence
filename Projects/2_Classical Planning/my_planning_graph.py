@@ -16,8 +16,11 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        raise NotImplementedError
-
+        for effectA in actionA.effects:
+                if (any(effectB == ~effectA for effectB in actionB.effects)):
+                    return True
+                else:
+                    return False
 
     def _interference(self, actionA, actionB):
         """ Return True if the effects of either action negate the preconditions of the other 
@@ -27,7 +30,12 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        raise NotImplementedError
+        for effectA in actionA.effects:
+            for precondA in actionA.preconditions:
+                if (any(precondB == ~effectA for precondB in actionB.preconditions) or any(effectB == ~precondA for effectB in actionB.effects)):
+                    return True
+                else:
+                    return False
 
     def _competing_needs(self, actionA, actionB):
         """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
@@ -38,8 +46,11 @@ class ActionLayer(BaseActionLayer):
         layers.BaseLayer.parent_layer
         """
         # TODO: implement this function
-        raise NotImplementedError
-
+        for precondsA in actionA.preconditions:
+            for precondsB in actionB.preconditions:
+               if self.parent_layer.is_mutex(precondsA, precondsB):
+                   return True
+        return False
 
 class LiteralLayer(BaseLiteralLayer):
 
@@ -51,12 +62,23 @@ class LiteralLayer(BaseLiteralLayer):
         layers.BaseLayer.parent_layer
         """
         # TODO: implement this function
-        raise NotImplementedError
+        for precondsA in literalA.preconditions:
+            for precondsB in literalB.preconditions:
+               if self.parent_layer.is_mutex(precondsA, precondsB):
+                   return True
+        return False
 
     def _negation(self, literalA, literalB):
         """ Return True if two literals are negations of each other """
         # TODO: implement this function
         raise NotImplementedError
+        
+    def test_children(self):
+        for literal in self:
+            assert all(literal in action.preconditions for action in self.children[literal])
+
+            for action in self.children[literal]:
+                print(action)
 
 
 class PlanningGraph:
